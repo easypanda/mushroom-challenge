@@ -11,7 +11,7 @@ layout = dbc.Container([
         dcc.Location(id='err404', refresh=True),
         dbc.Container(
             html.Img(
-                src='/assets/dash-logo-stripe.svg',
+                src='/assets/evonik.svg',
                 className='center'
             ),
         ),
