@@ -136,8 +136,11 @@ df = mapping_df(df)
 body = dbc.Container(
     [
         dbc.Row([   
-            dbc.Col([html.H1("Mushroom Challenge"),
-                    html.P("Please enter your parameters."),
+            dbc.Col([html.H1("Mushroom Challenge",
+                            style={'color': '#800080'}),
+                    html.Hr(),
+                    html.H4("Please enter your parameters below"),
+                    html.Hr(),
                     html.Label(["Name of the mushroom",
                     dcc.Input(
                                 id = "Name_Input",
@@ -146,7 +149,9 @@ body = dbc.Container(
                                 style={
                                         "width": "230px",
                                         "margin-left" : "30px"
-                               }),]),
+                               }),
+                    html.Hr(),
+                    ]),
                     
                 ]),
             dbc.Col([html.Img(src="https://idp.evonik.com/nidp/evonik/misc/img/logo.png",
@@ -156,7 +161,7 @@ body = dbc.Container(
                         'float': 'right',
                         'position': 'relative',
                         'padding-top': 10,
-                        'padding-left':30,
+                        'padding-left':0,
                         'padding-right': 0
                                 },
                             )]),
@@ -241,7 +246,8 @@ body = dbc.Container(
                     ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Gill-Size",
-                        )])])],no_gutters=True),  
+                        )])])],no_gutters=True),
+                html.Hr(),  
                 dbc.Row([
                     dbc.Col([html.Label(["Stalk Root", 
                         dcc.Dropdown(id="stalk_root_dropdown",
@@ -332,6 +338,7 @@ body = dbc.Container(
                                }),
                             ]),
                         ],no_gutters=True),
+            html.Hr(),
             dbc.Row([
                 html.Div(
                     dbc.Alert([html.H1(f"Please input all your parameters to get the prediction!",className="alert-heading")],color="light"), #First reminder message
@@ -340,7 +347,7 @@ body = dbc.Container(
                     "margin-top":"30px",
                     "margin-bottom":"30px",
                     "width": "1200px",
-                    "margin-left": "30px"
+                    "margin-left": "0px"
                                }
                         )]),
             dbc.Row([
