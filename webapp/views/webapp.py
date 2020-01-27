@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 import pickle
-
+import json
 
 #Dash visualización
 import dash
@@ -13,21 +13,125 @@ import dash_bootstrap_components as dbc
 import dash_daq as daq
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+from dash.dash import no_update
 
+#Sckit-Learn packages
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder,StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 
-
+#Plotly charts
 import plotly.figure_factory as ff
 import plotly.graph_objs as go
 import plotly.express as px
-import json
+
+#Getting all the previous import from before
+from app import app
 
 
+###############################################################################
+########### LANDING PAGE LAYOUT ###########
+###############################################################################
 
-df = pd.read_json("/home/alex/Desktop/Mushroom challenges/df_json_file.json")
 
+df = pd.read_json("output/df_json_file.json")
+#Mapping the variables with the full names
+def mapping_df(df):
+
+    odor = {'a': 'Almond',
+            'l': 'Anise',
+            'c': 'creosote',
+            'y': 'fishy',
+            'f': 'foul',
+            'm': 'musty',
+            'n': 'none',
+            'p': 'pungent',
+            's': 'spicy'}
+
+    cap_surface = { 'f': 'fibrous',
+                    'g': 'grooves',
+                    's': 'smooth',
+                    'y': 'scaly'}
+    gill_attachment = { 'a': 'attached',
+                        'f': 'free'}
+
+    population = {  'a': 'abundant',
+                    'c': 'clustered',
+                    'n': 'numerous',
+                    's': 'scattered',
+                    'v': 'several',
+                    'y': 'solitary'}
+
+    stalk_surface_above_ring = { 'f': 'fibrous',
+                                'k': 'silky',
+                                's': 'smooth',
+                                'y': 'scaly'}
+
+    gill_spacing = {'c': 'close',
+                    'w': 'crowded'}
+
+    gill_size = { 'b': 'broad',
+                'n': 'narrow'}           
+
+    stalk_root = { 'b': 'bulbous',
+                'c': 'club',
+                    'e': 'equal',
+                    'r': 'rooted',
+                    '?': 'missing'}
+
+    ring_type = {'e': 'evanescent',
+                'f': 'flaring',
+                'l': 'large',
+                'n': 'none',
+                'p': 'pendant'}    
+
+    veil_color = {'y': 'yellow',
+                'w': 'white',
+                'o': 'orange',
+                'n': 'brown'}
+
+    stalk_color_above_ring = {  'n': 'brown',
+                                'b': 'buff',
+                                'c': 'cinnamon',
+                                'g': 'gray',
+                                'o': 'orange',
+                                'p': 'pink',
+                                'e': 'red',
+                                'w': 'white',
+                                'y': 'yellow'}
+    spore_print_color= {'k': 'black',
+                        'n': 'brown',
+                        'b': 'buff',
+                        'h': 'chocolate',
+                        'r': 'green',
+                        'o': 'orange',
+                        'u': 'purple',
+                        'w': 'white',
+                        'y': 'yellow'}
+
+    ring_number = {'n': 'none',
+                'o': 'one',
+                't': 'two'}
+    df.columns = df.columns.str.replace("-","_")
+
+    df["veil_color"] = df["veil_color"].map(veil_color)
+    df["stalk_surface_above_ring"] = df["stalk_surface_above_ring"].map(stalk_surface_above_ring)
+    df["stalk_root"] = df["stalk_root"].map(stalk_root)
+    df["stalk_color_above_ring"] = df["stalk_color_above_ring"].map(stalk_color_above_ring)
+    df["spore_print_color"] = df["spore_print_color"].map(spore_print_color)
+    df["ring_type"] = df["ring_type"].map(ring_type)
+    df["ring_number"] = df["ring_number"].map(ring_number)
+    df["population"] = df["population"].map(population)
+    df["odor"] = df["odor"].map(odor)
+    df["gill_spacing"] = df["gill_spacing"].map(gill_spacing)
+    df["gill_size"] = df["gill_size"].map(gill_size)
+    df["gill_attachment"] = df["gill_attachment"].map(gill_attachment)
+    df["cap_surface"] = df["cap_surface"].map(cap_surface)
+
+    df.columns = df.columns.str.replace("_","")
+
+    return df
+df = mapping_df(df)
 
 body = dbc.Container(
     [
@@ -57,9 +161,9 @@ body = dbc.Container(
                                 },
                             )]),
                 ]),
+#Layout with all the dropdown menus
         dbc.Row([
-                dbc.Col([
-                        html.Label(["Odor",
+                dbc.Col([html.Label(["Odor",
                         dcc.Dropdown(id="odor_dropdown",
                             options=[
                         {'label': 'Almond', 'value': 'a'},
@@ -75,8 +179,8 @@ body = dbc.Container(
                     style={"margin-right":"35px",
                     "verticalAlign":"middle"},
                     placeholder="Select an Odor",
-                        )]),
-                        html.Label(["Cap_Surface",
+                        )])]),
+                dbc.Col([html.Label(["Cap Surface",
                         dcc.Dropdown(id="cap_surface_dropdown",
                             options=[ 
                         {'label': 'fibrous', 'value': 'f'},
@@ -86,8 +190,8 @@ body = dbc.Container(
                     ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Cap-Surface",
-                        )]),
-                        html.Label(["Gill-Attachment", 
+                        )])]),
+                    dbc.Col([html.Label(["Gill Attachment", 
                         dcc.Dropdown(id="gill_attachment_dropdown",
                             options=[
                         {'label': 'attached', 'value': 'a'},
@@ -95,8 +199,8 @@ body = dbc.Container(
                     ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Gill-Attachment",
-                        )]),
-                        html.Label(["Population", 
+                        )])]),
+                    dbc.Col([html.Label(["Population", 
                         dcc.Dropdown(id="population_dropdown",
                             options=[
                         {'label': 'abundant', 'value': 'a'},
@@ -108,8 +212,8 @@ body = dbc.Container(
                     ],
                     style={"margin-right":"35px"},
                     placeholder="Select a population",
-                        )]),
-                        html.Label(["Stalk Surface Above Ring", 
+                        )])]),
+                    dbc.Col([html.Label(["StalkSurfaceAboveRing", 
                         dcc.Dropdown(id="stalk_surface_above_ring_dropdown",
                             options=[
                         {'label': 'fibrous', 'value': 'f'},
@@ -119,8 +223,8 @@ body = dbc.Container(
                     ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Stalk Surface Above Ring",
-                        )]),
-                        html.Label(["Gill-Spacing", 
+                        )])]),
+                    dbc.Col([html.Label(["Gill Spacing", 
                         dcc.Dropdown(id="gill_spacing_dropdown",
                             options=[
                         {'label': 'close', 'value': 'c'},
@@ -128,8 +232,8 @@ body = dbc.Container(
                     ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Gill-Spacing",
-                        )]),
-                        html.Label(["Gill-Size", 
+                        )])]),
+                    dbc.Col([html.Label(["Gill Size", 
                         dcc.Dropdown(id="gill_size_dropdown",
                             options=[
                         {'label': 'broad', 'value': 'b'},
@@ -137,9 +241,9 @@ body = dbc.Container(
                     ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Gill-Size",
-                        )]),
+                        )])])],no_gutters=True),  
                 dbc.Row([
-                        html.Label(["Stalk-Root", 
+                    dbc.Col([html.Label(["Stalk Root", 
                         dcc.Dropdown(id="stalk_root_dropdown",
                             options=[
                         {'label': 'bulbous', 'value': 'b'},
@@ -151,8 +255,8 @@ body = dbc.Container(
                     style={"margin-right":"35px",
                     "verticalAlign":"middle"},
                     placeholder="Select a Stalk-Root",
-                        )]),
-                        html.Label(["Ring-Type", 
+                        )])]),
+                    dbc.Col([html.Label(["Ring Type", 
                         dcc.Dropdown(id="ring_type_dropdown",
                             options=[
                         {'label': 'evanescent', 'value': 'e'},
@@ -163,8 +267,8 @@ body = dbc.Container(
                         ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Ring-Type",
-                        )]),
-                        html.Label(["Veil-Color", 
+                        )])]),
+                    dbc.Col([html.Label(["Veil Color", 
                         dcc.Dropdown(id="veil_color_dropdown",
                             options=[
                         {'label': 'yellow', 'value': 'y'},
@@ -174,8 +278,8 @@ body = dbc.Container(
                     ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Veil-Color",
-                        )]),
-                        html.Label(["Stalk-Color-Above-Ring", 
+                        )])]),
+                    dbc.Col([html.Label(["StalkColorAboveRing", 
                         dcc.Dropdown(id="stalk_color_above_ring_dropdown",
                             options=[
                         {'label': 'brown', 'value': 'n'},
@@ -190,8 +294,8 @@ body = dbc.Container(
                         ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Stalk-Color-Above-Ring",
-                        )]),
-                        html.Label(["Spore-Print-Color", 
+                        )])]),
+                    dbc.Col([html.Label(["SporePrintColor", 
                         dcc.Dropdown(id="spore_print_color_dropdown",
                             options=[
                         {'label': 'black', 'value': 'k'},
@@ -206,8 +310,8 @@ body = dbc.Container(
                         ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Spore-Print-Color",
-                        )]),
-                        html.Label(["ring-number", 
+                        )])]),
+                    dbc.Col([html.Label(["Ring Number", 
                         dcc.Dropdown(id="ring_number_dropdown",
                             options=[
                         {'label': 'none', 'value': 'n'},
@@ -216,53 +320,57 @@ body = dbc.Container(
                         ],
                     style={"margin-right":"35px"},
                     placeholder="Select a Ring-Number",
-                        )]),
+                        )])]),
+                    dbc.Col([
                         dbc.Button("Submit",
                         color="secondary",
                         id='submit-button',
                         n_clicks=0,
                         style={
                             "width": "100px",
-                            "margin-left": "30px",
-                            "margin-right":"10px"
+                            "margin-top":"22px"
                                }),
                             ]),
-                    ]),
-    ]),
+                        ],no_gutters=True),
             dbc.Row([
                 html.Div(
+                    dbc.Alert([html.H1(f"Please input all your parameters to get the prediction!",className="alert-heading")],color="light"), #First reminder message
                         id = "prediction",
                 style={
                     "margin-top":"30px",
                     "margin-bottom":"30px",
-                    "width": "800px",
-                    "margin-top" : "55px",
+                    "width": "1200px",
                     "margin-left": "30px"
                                }
                         )]),
             dbc.Row([
                     # Hidden div inside the app that stores the intermediate value
-                    html.Div(id='intermediate-value', style={'display': 'none'}),
+                    dbc.Col([html.Div(id='intermediate-value', style={'display': 'none'}),
                     dash_table.DataTable(
                                             id='table',
                                             columns=[{"name": i, "id": i} for i in df.columns],
                                             data=df.to_dict('records'),
+                                            filter_action='native',
+                                            sort_action='native',
+                                            editable=True,
                                             style_table={'overflowX': 'scroll',
-                                                         'overflowY':'scroll'},
+                                                         #'overflowY':'scroll',
+                                                         'border': 'thin lightgrey solid',
+                                                         "minWidth": '100%',
+                                                         "max-width": "1200px",
+                                                         'maxHeight': '300px'},
                                             export_format='csv',
                                             export_headers='display',
-                                            merge_duplicate_headers=True
-                                        ),
-                    #dbc.Table.from_dataframe(id='table',df)
-                    ]),     
+                                            merge_duplicate_headers=True),
+                            ])
+                    ]),    
 ])
 
 
-#Launching the app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.layout = html.Div([body])
+#The layout of the app
+layout = html.Div([body])
 
-
+#Getting all the data needed for the prediction through State
 @app.callback(
     [Output('prediction', 'children'),
     Output('intermediate-value',"children")],
@@ -283,7 +391,7 @@ app.layout = html.Div([body])
     State('spore_print_color_dropdown', 'value'),
     State('ring_number_dropdown','value')]
             )
-def update_output(n_clicks,
+def update_output(  n_clicks,
                     Name_Input,
                     odor_dropdown,
                     cap_surface_dropdown,
@@ -299,10 +407,9 @@ def update_output(n_clicks,
                     spore_print_color_dropdown,
                     ring_number_dropdown):
 
-    #Creating the dataframe...
-
-    if n_clicks is None:
+    if n_clicks == 0: #If n_clicks == 0 then do nothing
         raise PreventUpdate
+
     else:
         data = {
                 "name"                      :Name_Input,
@@ -322,36 +429,55 @@ def update_output(n_clicks,
                 "cap-surface"               :cap_surface_dropdown,
                 }
 
-    df_model = pd.DataFrame([data])
+        df_model = pd.DataFrame([data]) #Loading the data into a dataframe
 
-    #Loading the pipeline and the model
-    loading_model = pickle.load(open("/home/alex/Desktop/Mushroom challenges/finalized_model.sav", 'rb'))
+        #Loading the pipeline and the model
+        loading_model = pickle.load(open("input/finalized_model.sav", 'rb')) 
+        try:
+            predicted_value = loading_model.predict(df_model.drop(columns=["name","prediction"]))
+        
+            predicted_value = ["Poisonous" if x == 1 else "edible" for x in predicted_value][0]
+            df_model.loc[:,"prediction"] = predicted_value
 
-    predicted_value = loading_model.predict(df_model.drop(columns=["name","prediction"]))
+            if Name_Input is None or Name_Input == "": #Alert message in case of missing name
+                alert = [dbc.Alert([html.H1(f"Please enter a name!",className="alert-heading")],color="danger")]
+                return alert,None
 
-    predicted_value = ["Poisonous" if x == 1 else "edible" for x in predicted_value][0]
+            elif predicted_value == "edible":
+                alert = [dbc.Alert([html.H1(f"The mushroom {Name_Input} is edible!",className="alert-heading")],color="success")]
+                return alert, df_model.to_json(orient='split')
+            else:
+                alert = [dbc.Alert([html.H1(f"The mushroom {Name_Input} is Poisonous!",className="alert-heading")],color="danger")]
+                return alert,df_model.to_json(orient='split')
+        
+        except ValueError: #Alert message in case of missing fields
 
-    df_model.loc[:,"prediction"] = predicted_value
+            alert = [dbc.Alert([html.H1(f"Please fill all the fields before submitting!",className="alert-heading")],color="danger")]
+            return alert, None
 
 
-    if predicted_value == "edible":
-        alert = [dbc.Alert([html.H1(f"The mushroom {Name_Input} is edible!",className="alert-heading")],color="success")]
-        return alert, df_model.to_json(orient='split')
-    else:
-        alert = [dbc.Alert([html.H1(f"The mushroom {Name_Input} is Poisonous!",className="alert-heading")],color="danger")]
-        return alert,df_model.to_json(orient='split')
-
+#Updating the table through the Json file
 @app.callback(
-            [Output('table', 'data'),
-            Output('table', 'columns')],
+            [Output('table', 'data')],
             [Input('intermediate-value', 'children')])
+
 def update_table(jsonified_cleaned_data):
+
+    if jsonified_cleaned_data is None: #If jsonified_cleaned_data is empty then do nothing
+        raise PreventUpdate
+    
+    #Creating a new dataframe for the new data
     df_new_row = pd.read_json(jsonified_cleaned_data, orient='split')
-    df = pd.read_json("/home/alex/Desktop/Mushroom challenges/df_json_file.json")
+
+    df = pd.read_json("output/df_json_file.json")
+
+    #Adding the new row to the pre-existing data
     df = df.append(df_new_row,ignore_index=True, verify_integrity=False, sort=None)
-    df.to_json("/home/alex/Desktop/Mushroom challenges/df_json_file.json")
-    return df.to_dict('records'), [{"name": i, "id": i} for i in df.columns]
 
+    #Save the new data
+    df.to_json("output/df_json_file.json")
 
-if __name__ == '__main__':
-    app.run_server(debug=True)
+    #Mapping the name for display
+    df = mapping_df(df)
+
+    return [df.to_dict('records')] #Return the data

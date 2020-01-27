@@ -1,1 +1,0 @@
-Mushroom challenge done for Evonik!
