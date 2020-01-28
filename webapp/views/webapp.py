@@ -131,6 +131,7 @@ def mapping_df(df):
     df.columns = df.columns.str.replace("_","")
 
     return df
+
 df = mapping_df(df)
 
 body = dbc.Container(
@@ -154,15 +155,14 @@ body = dbc.Container(
                     ]),
                     
                 ]),
-            dbc.Col([html.Img(src="https://idp.evonik.com/nidp/evonik/misc/img/logo.png",
+            dbc.Col([html.Img(src="./assets/evonik_cropped.png",
                             style={
-                        'height': '75%',
-                        'width': '75%',
                         'float': 'right',
                         'position': 'relative',
-                        'padding-top': 10,
-                        'padding-left':0,
-                        'padding-right': 0
+                        'padding-top': "10px",
+                        #'padding-bottom':'50px',
+                        #'padding-left':0,
+                        #'padding-right': 0
                                 },
                             )]),
                 ]),

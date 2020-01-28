@@ -15,11 +15,12 @@ layout = dbc.Container([
         html.Div([
             dbc.Container(
                 html.Img(
-                    src='/assets/evonik.svg',
+                    src='/assets/evonik_cropped.png',
                     className='center',
-                    width="400px",
-                    height="400px"
-                ),
+                    #width="400px",
+                    #height="400px"
+                ),style={"padding-bottom": "100px",
+                         "padding-right": "50px"},
             ),
             dbc.Container(id='loginType', children=[
                 dcc.Input(
